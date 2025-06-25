@@ -19,14 +19,6 @@ namespace DeliveryMinimalAPI.Controllers
             return Ok(Services.Select(s => s.Name));
         }
 
-        [HttpGet("{apiKey}")]
-        public ActionResult<DeliveryService> GetByApiKey(string apiKey)
-        {
-            var service = Services.FirstOrDefault(s => s.Name.Equals(apiKey, StringComparison.OrdinalIgnoreCase));
-            if (service == null) return NotFound();
-            return Ok(service);
-        }
-
         [HttpGet("IsAuthenticationOk")]
         public ActionResult<bool> IsAuthenticationOk()
         {
