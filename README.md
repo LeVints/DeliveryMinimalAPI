@@ -68,10 +68,10 @@ http://localhost:5111/swagger
 
 ```mermaid
 flowchart TD
-    A["Start applicatie"] --> B["Open Swagger UI"]
-    B --> C["POST /api/DeliveryStates/StartDelivery"]
-    C --> D["Nieuwe levering toegevoegd"]
-    D --> E["Levering zichtbaar op statuspagina"]
+    A["Start<br/>applicatie"] --> B["Open<br/>Swagger UI"]
+    B --> C["POST<br/>/api/DeliveryStates/StartDelivery"]
+    C --> D["Nieuwe levering<br/>toegevoegd"]
+    D --> E["Levering zichtbaar<br/>op statuspagina"]
 ```
 
 ---
