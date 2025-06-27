@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using DeliveryMinimalAPI.Models;
+using DeliveryMinimalAPI.DTOs;
 
 namespace DeliveryMinimalAPI.Controllers
 {
@@ -9,23 +10,7 @@ namespace DeliveryMinimalAPI.Controllers
     {
         private static readonly List<Customer> Customers = new();
 
-        // GET: api/customer
-        [HttpGet]
-        public ActionResult<IEnumerable<Customer>> GetAll()
-        {
-            return Ok(Customers);
-        }
-
-        // GET: api/customer/{id}
-        [HttpGet("{id}")]
-        public ActionResult<Customer> GetById(int id)
-        {
-            var customer = Customers.FirstOrDefault(c => c.Id == id);
-            if (customer == null) return NotFound();
-            return Ok(customer);
-        }
-
-        // POST: api/customer
+        // POST: api/customer - Klant aanmaken
         [HttpPost]
         public ActionResult<Customer> Create([FromBody] Customer customer)
         {
@@ -38,60 +23,52 @@ namespace DeliveryMinimalAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
         }
 
-        // PUT: api/customer/{id} - Volledige update
-        [HttpPut("{id}")]
-        public ActionResult<Customer> Update(int id, [FromBody] Customer customer)
+        // GET: api/customer/{id} - Klant ophalen
+        [HttpGet("{id}")]
+        public ActionResult<Customer> GetById(int id)
         {
-            if (customer == null) return BadRequest();
-            
-            var existingCustomer = Customers.FirstOrDefault(c => c.Id == id);
-            if (existingCustomer == null) return NotFound();
-
-            // Update alle velden
-            existingCustomer.Name = customer.Name;
-            existingCustomer.Address = customer.Address;
-            existingCustomer.Active = customer.Active;
-
-            return Ok(existingCustomer);
+            var customer = Customers.FirstOrDefault(c => c.Id == id);
+            if (customer == null) return NotFound();
+            return Ok(customer);
         }
 
-        // PATCH: api/customer/{id} - Gedeeltelijke update
-        [HttpPatch("{id}")]
-        public ActionResult<Customer> PartialUpdate(int id, [FromBody] CustomerUpdateRequest request)
-        {
-            var existingCustomer = Customers.FirstOrDefault(c => c.Id == id);
-            if (existingCustomer == null) return NotFound();
-
-            // Update alleen de velden die zijn opgegeven
-            if (request.Name != null)
-                existingCustomer.Name = request.Name;
-            
-            if (request.Address != null)
-                existingCustomer.Address = request.Address;
-            
-            if (request.Active.HasValue)
-                existingCustomer.Active = request.Active.Value;
-
-            return Ok(existingCustomer);
-        }
-
-        // DELETE: api/customer/{id}
-        [HttpDelete("{id}")]
-        public ActionResult Delete(int id)
+        // GET: api/customer/{id}/orders - Orders van klant met status
+        [HttpGet("{id}/orders")]
+        public ActionResult<CustomerOrdersWithStatusResponse> GetCustomerOrdersWithStatus(int id)
         {
             var customer = Customers.FirstOrDefault(c => c.Id == id);
             if (customer == null) return NotFound();
 
-            Customers.Remove(customer);
-            return NoContent();
-        }
-    }
+            var customerOrders = OrderController.GetOrdersByCustomerId(id);
+            var ordersWithStatus = new List<OrderWithDeliveryStatus>();
 
-    // DTO voor gedeeltelijke updates
-    public class CustomerUpdateRequest
-    {
-        public string? Name { get; set; }
-        public string? Address { get; set; }
-        public bool? Active { get; set; }
+            foreach (var order in customerOrders)
+            {
+                var latestDeliveryState = DeliveryStatesController.GetLatestDeliveryState(order.Id);
+                var allDeliveryStates = DeliveryStatesController.GetDeliveryStatesByOrderId(order.Id);
+
+                ordersWithStatus.Add(new OrderWithDeliveryStatus
+                {
+                    Order = order,
+                    CurrentStatus = latestDeliveryState?.State,
+                    DeliveryHistory = allDeliveryStates,
+                    LastUpdated = latestDeliveryState?.DateTime
+                });
+            }
+
+            var response = new CustomerOrdersWithStatusResponse
+            {
+                Customer = customer,
+                OrdersWithStatus = ordersWithStatus
+            };
+
+            return Ok(response);
+        }
+
+        // Static method om customers te delen met andere controllers
+        public static List<Customer> GetAllCustomers()
+        {
+            return Customers;
+        }
     }
 } 

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using DeliveryMinimalAPI.Models;
+using DeliveryMinimalAPI.DTOs;
 
 namespace DeliveryMinimalAPI.Controllers
 {
@@ -9,31 +10,7 @@ namespace DeliveryMinimalAPI.Controllers
     {
         private static readonly List<DeliveryState> States = new();
 
-        // GET: api/deliverystates
-        [HttpGet]
-        public ActionResult<IEnumerable<DeliveryState>> GetAll()
-        {
-            return Ok(States);
-        }
-
-        // GET: api/deliverystates/{id}
-        [HttpGet("{id}")]
-        public ActionResult<DeliveryState> GetById(int id)
-        {
-            var state = States.FirstOrDefault(s => s.Id == id);
-            if (state == null) return NotFound();
-            return Ok(state);
-        }
-
-        // GET: api/deliverystates/order/{orderId}
-        [HttpGet("order/{orderId}")]
-        public ActionResult<IEnumerable<DeliveryState>> GetByOrderId(int orderId)
-        {
-            var orderStates = States.Where(s => s.OrderId == orderId).OrderBy(s => s.DateTime);
-            return Ok(orderStates);
-        }
-
-        // POST: api/deliverystates
+        // POST: api/deliverystates - Nieuwe delivery status toevoegen
         [HttpPost]
         public ActionResult<DeliveryState> Create([FromBody] CreateDeliveryStateRequest request)
         {
@@ -49,10 +26,10 @@ namespace DeliveryMinimalAPI.Controllers
                 DeliveryServiceId = request.DeliveryServiceId
             };
             States.Add(state);
-            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+            return Ok(state);
         }
 
-        // PUT: api/deliverystates/{id}
+        // PUT: api/deliverystates/{id} - Delivery status bijwerken
         [HttpPut("{id}")]
         public ActionResult<DeliveryState> Update(int id, [FromBody] UpdateDeliveryStateRequest request)
         {
@@ -70,17 +47,6 @@ namespace DeliveryMinimalAPI.Controllers
             return Ok(state);
         }
 
-        // DELETE: api/deliverystates/{id}
-        [HttpDelete("{id}")]
-        public ActionResult Delete(int id)
-        {
-            var state = States.FirstOrDefault(s => s.Id == id);
-            if (state == null) return NotFound();
-
-            States.Remove(state);
-            return NoContent();
-        }
-
         // Convenience endpoints voor specifieke acties
         [HttpPost("order/{orderId}/start")]
         public ActionResult<DeliveryState> StartDelivery(int orderId, [FromBody] StartDeliveryRequest request)
@@ -94,7 +60,7 @@ namespace DeliveryMinimalAPI.Controllers
                 DeliveryServiceId = request.DeliveryServiceId
             };
             States.Add(state);
-            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+            return Ok(state);
         }
 
         [HttpPost("order/{orderId}/ship")]
@@ -108,7 +74,7 @@ namespace DeliveryMinimalAPI.Controllers
                 DateTime = DateTime.UtcNow
             };
             States.Add(state);
-            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+            return Ok(state);
         }
 
         [HttpPost("order/{orderId}/deliver")]
@@ -122,26 +88,23 @@ namespace DeliveryMinimalAPI.Controllers
                 DateTime = DateTime.UtcNow
             };
             States.Add(state);
-            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+            return Ok(state);
         }
-    }
 
-    // DTO's voor requests
-    public class CreateDeliveryStateRequest
-    {
-        public int OrderId { get; set; }
-        public DeliveryStateEnum State { get; set; }
-        public int? DeliveryServiceId { get; set; }
-    }
+        // Static methods om delivery states te delen met andere controllers
+        public static List<DeliveryState> GetAllDeliveryStates()
+        {
+            return States;
+        }
 
-    public class UpdateDeliveryStateRequest
-    {
-        public DeliveryStateEnum? State { get; set; }
-        public int? DeliveryServiceId { get; set; }
-    }
+        public static List<DeliveryState> GetDeliveryStatesByOrderId(int orderId)
+        {
+            return States.Where(s => s.OrderId == orderId).OrderBy(s => s.DateTime).ToList();
+        }
 
-    public class StartDeliveryRequest
-    {
-        public int? DeliveryServiceId { get; set; }
+        public static DeliveryState? GetLatestDeliveryState(int orderId)
+        {
+            return States.Where(s => s.OrderId == orderId).OrderByDescending(s => s.DateTime).FirstOrDefault();
+        }
     }
 } 
