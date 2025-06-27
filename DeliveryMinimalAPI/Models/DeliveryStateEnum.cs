@@ -2,9 +2,13 @@ namespace DeliveryMinimalAPI.Models
 {
     public enum DeliveryStateEnum
     {
-        State1 = 1,
-        State2 = 2,
-        State3 = 3,
-        State4 = 4
+        OrderReceived = 1,
+        Processing = 2,
+        Shipped = 3,
+        InTransit = 4,
+        OutForDelivery = 5,
+        Delivered = 6,
+        Failed = 7,
+        Returned = 8
     }
 } 

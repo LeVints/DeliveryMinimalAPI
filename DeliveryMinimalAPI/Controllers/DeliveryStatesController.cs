@@ -9,44 +9,139 @@ namespace DeliveryMinimalAPI.Controllers
     {
         private static readonly List<DeliveryState> States = new();
 
-        [HttpGet("DeliveryStates")]
-        public ActionResult<IEnumerable<DeliveryState>> GetDeliveryStates()
+        // GET: api/deliverystates
+        [HttpGet]
+        public ActionResult<IEnumerable<DeliveryState>> GetAll()
         {
             return Ok(States);
         }
 
-        [HttpGet("GetAllDeliveryStates")]
-        public ActionResult<IEnumerable<DeliveryState>> GetAllDeliveryStates()
+        // GET: api/deliverystates/{id}
+        [HttpGet("{id}")]
+        public ActionResult<DeliveryState> GetById(int id)
         {
-            return Ok(States);
+            var state = States.FirstOrDefault(s => s.Id == id);
+            if (state == null) return NotFound();
+            return Ok(state);
         }
 
-        [HttpPost("StartDelivery")]
-        public ActionResult<IEnumerable<DeliveryState>> StartDelivery([FromQuery] int OrderId)
+        // GET: api/deliverystates/order/{orderId}
+        [HttpGet("order/{orderId}")]
+        public ActionResult<IEnumerable<DeliveryState>> GetByOrderId(int orderId)
         {
-            var state = new DeliveryState { Id = States.Count + 1, OrderId = OrderId, State = DeliveryStateEnum.State1, DateTime = DateTime.UtcNow };
-            States.Add(state);
-            return Ok(States);
+            var orderStates = States.Where(s => s.OrderId == orderId).OrderBy(s => s.DateTime);
+            return Ok(orderStates);
         }
 
-        [HttpPost("UpdateDeliveryState")]
-        public ActionResult<IEnumerable<DeliveryState>> UpdateDeliveryState([FromBody] DeliveryState deliveryState)
+        // POST: api/deliverystates
+        [HttpPost]
+        public ActionResult<DeliveryState> Create([FromBody] CreateDeliveryStateRequest request)
         {
-            var state = States.FirstOrDefault(s => s.Id == deliveryState.Id);
-            if (state != null)
+            if (request == null || request.OrderId <= 0)
+                return BadRequest("OrderId is required and must be greater than 0");
+
+            var state = new DeliveryState
             {
-                state.State = deliveryState.State;
-                state.DateTime = deliveryState.DateTime;
-            }
-            return Ok(States);
+                Id = States.Count + 1,
+                OrderId = request.OrderId,
+                State = request.State,
+                DateTime = DateTime.UtcNow,
+                DeliveryServiceId = request.DeliveryServiceId
+            };
+            States.Add(state);
+            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
         }
 
-        [HttpPost("CompleteDelivery")]
-        public ActionResult<IEnumerable<DeliveryState>> CompleteDelivery([FromQuery] int OrderId)
+        // PUT: api/deliverystates/{id}
+        [HttpPut("{id}")]
+        public ActionResult<DeliveryState> Update(int id, [FromBody] UpdateDeliveryStateRequest request)
         {
-            var state = new DeliveryState { Id = States.Count + 1, OrderId = OrderId, State = DeliveryStateEnum.State4, DateTime = DateTime.UtcNow };
-            States.Add(state);
-            return Ok(States);
+            var state = States.FirstOrDefault(s => s.Id == id);
+            if (state == null) return NotFound();
+
+            if (request.State.HasValue)
+                state.State = request.State.Value;
+
+            if (request.DeliveryServiceId.HasValue)
+                state.DeliveryServiceId = request.DeliveryServiceId.Value;
+
+            state.DateTime = DateTime.UtcNow; // Update timestamp
+
+            return Ok(state);
         }
+
+        // DELETE: api/deliverystates/{id}
+        [HttpDelete("{id}")]
+        public ActionResult Delete(int id)
+        {
+            var state = States.FirstOrDefault(s => s.Id == id);
+            if (state == null) return NotFound();
+
+            States.Remove(state);
+            return NoContent();
+        }
+
+        // Convenience endpoints voor specifieke acties
+        [HttpPost("order/{orderId}/start")]
+        public ActionResult<DeliveryState> StartDelivery(int orderId, [FromBody] StartDeliveryRequest request)
+        {
+            var state = new DeliveryState
+            {
+                Id = States.Count + 1,
+                OrderId = orderId,
+                State = DeliveryStateEnum.OrderReceived,
+                DateTime = DateTime.UtcNow,
+                DeliveryServiceId = request.DeliveryServiceId
+            };
+            States.Add(state);
+            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+        }
+
+        [HttpPost("order/{orderId}/ship")]
+        public ActionResult<DeliveryState> ShipOrder(int orderId)
+        {
+            var state = new DeliveryState
+            {
+                Id = States.Count + 1,
+                OrderId = orderId,
+                State = DeliveryStateEnum.Shipped,
+                DateTime = DateTime.UtcNow
+            };
+            States.Add(state);
+            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+        }
+
+        [HttpPost("order/{orderId}/deliver")]
+        public ActionResult<DeliveryState> DeliverOrder(int orderId)
+        {
+            var state = new DeliveryState
+            {
+                Id = States.Count + 1,
+                OrderId = orderId,
+                State = DeliveryStateEnum.Delivered,
+                DateTime = DateTime.UtcNow
+            };
+            States.Add(state);
+            return CreatedAtAction(nameof(GetById), new { id = state.Id }, state);
+        }
+    }
+
+    // DTO's voor requests
+    public class CreateDeliveryStateRequest
+    {
+        public int OrderId { get; set; }
+        public DeliveryStateEnum State { get; set; }
+        public int? DeliveryServiceId { get; set; }
+    }
+
+    public class UpdateDeliveryStateRequest
+    {
+        public DeliveryStateEnum? State { get; set; }
+        public int? DeliveryServiceId { get; set; }
+    }
+
+    public class StartDeliveryRequest
+    {
+        public int? DeliveryServiceId { get; set; }
     }
 } 
