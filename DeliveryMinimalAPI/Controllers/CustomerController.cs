@@ -51,7 +51,6 @@ namespace DeliveryMinimalAPI.Controllers
             existingCustomer.Name = customer.Name;
             existingCustomer.Address = customer.Address;
             existingCustomer.Active = customer.Active;
-            existingCustomer.Orders = customer.Orders;
 
             return Ok(existingCustomer);
         }
