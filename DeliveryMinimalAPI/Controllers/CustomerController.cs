@@ -8,7 +8,16 @@ namespace DeliveryMinimalAPI.Controllers
     [Route("api/[controller]")]
     public class CustomerController : ControllerBase
     {
-        private static readonly List<Customer> Customers = new();
+        private readonly List<Customer> _customers;
+        private readonly List<Order> _orders;
+        private readonly List<DeliveryState> _deliveryStates;
+
+        public CustomerController(List<Customer> customers, List<Order> orders, List<DeliveryState> deliveryStates)
+        {
+            _customers = customers;
+            _orders = orders;
+            _deliveryStates = deliveryStates;
+        }
 
         // POST: api/customer - Klant aanmaken
         [HttpPost]
@@ -16,9 +25,9 @@ namespace DeliveryMinimalAPI.Controllers
         {
             if (customer == null) return BadRequest();
             
-            customer.Id = Customers.Count > 0 ? Customers.Max(c => c.Id) + 1 : 1;
+            customer.Id = _customers.Count > 0 ? _customers.Max(c => c.Id) + 1 : 1;
             customer.Active = true; // Default to active
-            Customers.Add(customer);
+            _customers.Add(customer);
             
             return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
         }
@@ -27,7 +36,7 @@ namespace DeliveryMinimalAPI.Controllers
         [HttpGet("{id}")]
         public ActionResult<Customer> GetById(int id)
         {
-            var customer = Customers.FirstOrDefault(c => c.Id == id);
+            var customer = _customers.FirstOrDefault(c => c.Id == id);
             if (customer == null) return NotFound();
             return Ok(customer);
         }
@@ -36,16 +45,23 @@ namespace DeliveryMinimalAPI.Controllers
         [HttpGet("{id}/orders")]
         public ActionResult<CustomerOrdersWithStatusResponse> GetCustomerOrdersWithStatus(int id)
         {
-            var customer = Customers.FirstOrDefault(c => c.Id == id);
+            var customer = _customers.FirstOrDefault(c => c.Id == id);
             if (customer == null) return NotFound();
 
-            var customerOrders = OrderController.GetOrdersByCustomerId(id);
+            var customerOrders = _orders.Where(o => o.CustomerId == id).ToList();
             var ordersWithStatus = new List<OrderWithDeliveryStatus>();
 
             foreach (var order in customerOrders)
             {
-                var latestDeliveryState = DeliveryStatesController.GetLatestDeliveryState(order.Id);
-                var allDeliveryStates = DeliveryStatesController.GetDeliveryStatesByOrderId(order.Id);
+                var latestDeliveryState = _deliveryStates
+                    .Where(ds => ds.OrderId == order.Id)
+                    .OrderByDescending(ds => ds.DateTime)
+                    .FirstOrDefault();
+                
+                var allDeliveryStates = _deliveryStates
+                    .Where(ds => ds.OrderId == order.Id)
+                    .OrderBy(ds => ds.DateTime)
+                    .ToList();
 
                 ordersWithStatus.Add(new OrderWithDeliveryStatus
                 {
@@ -68,7 +84,7 @@ namespace DeliveryMinimalAPI.Controllers
         // Static method om customers te delen met andere controllers
         public static List<Customer> GetAllCustomers()
         {
-            return Customers;
+            return new List<Customer>(); // This will be empty now, but other controllers can inject the service
         }
     }
 } 

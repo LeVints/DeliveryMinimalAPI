@@ -1,0 +1,33 @@
+{
+  "customer": {
+    "id": 1,
+    "name": "Vince",
+    "address": "Maastricht",
+    "active": true
+  },
+  "ordersWithStatus": [
+    {
+      "order": {
+        "id": 1,
+        "orderDate": "2025-06-30T00:34:45.9339994Z",
+        "customerId": 1,
+        "customer": null,
+        "products": null,
+        "deliveryStates": null
+      },
+      "currentStatus": 2,
+      "deliveryHistory": [
+        {
+          "id": 1,
+          "state": 2,
+          "dateTime": "2025-06-30T00:35:34.1523066Z",
+          "orderId": 1,
+          "order": null,
+          "deliveryServiceId": 0,
+          "deliveryService": null
+        }
+      ],
+      "lastUpdated": "2025-06-30T00:35:34.1523066Z"
+    }
+  ]
+} 
