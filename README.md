@@ -46,33 +46,17 @@ http://localhost:5111/swagger
 
 1. Ga in Swagger UI naar:
    ```
-   POST /api/DeliveryStates/StartDelivery
+   POST /api/Customer
+   ```
+ ```
+   POST /api/Order
+   ```
+ ```
+   POST /api/DeliveryStates
    ```
 2. Klik op **Try it out** en vervolgens op **Execute**.
 3. Er wordt nu lokaal een nieuwe levering gestart.
 4. Deze levering wordt toegevoegd aan de statuslijst en is zichtbaar op de statuspagina van de bezorgersapp.
-
----
-
-## Andere endpoints
-
-| Methode | Endpoint                        | Beschrijving                           |
-| ------- | ------------------------------- | -------------------------------------- |
-| GET     | /api/DeliveryStates             | Haalt alle leverstatussen op           |
-| PUT     | /api/DeliveryStates/{id}        | Past een leverstatus aan op ID         |
-| DELETE  | /api/DeliveryStates/{id}        | Verwijdert een leverstatus op ID       |
-
----
-
-## Applicatie-overzicht
-
-```mermaid
-flowchart TD
-    A["Start<br/>applicatie"] --> B["Open<br/>Swagger UI"]
-    B --> C["POST<br/>/api/DeliveryStates/StartDelivery"]
-    C --> D["Nieuwe levering<br/>toegevoegd"]
-    D --> E["Levering zichtbaar<br/>op statuspagina"]
-```
 
 ---
 
