@@ -48,15 +48,13 @@ http://localhost:5111/swagger
    ```
    POST /api/Customer
    ```
- ```
+   ```
    POST /api/Order
    ```
- ```
+   ```
    POST /api/DeliveryStates
    ```
-2. Klik op **Try it out** en vervolgens op **Execute**.
-3. Er wordt nu lokaal een nieuwe levering gestart.
-4. Deze levering wordt toegevoegd aan de statuslijst en is zichtbaar op de statuspagina van de bezorgersapp.
+2. Je moet al die 3 doen om nieuwe data te starten voor mobiele app, maar er is ook 1 dummy data
 
 ---
 
